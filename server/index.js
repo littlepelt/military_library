@@ -1,8 +1,8 @@
 const express = require('express');
 const cors = require('cors');
 require('dotenv').config();
-const pool = require('./db');            // наш модуль подключения
-const initDb = require('./initDb');     // инициализация таблиц
+const pool = require('./db');
+const initDb = require('./initDb');
 
 const app = express();
 const port = process.env.PORT || 5000;
@@ -10,12 +10,15 @@ const port = process.env.PORT || 5000;
 app.use(cors());
 app.use(express.json());
 
+// Подключаем маршруты аутентификации
+const authRoutes = require('./routes/auth');   // <-- добавили
+app.use('/api/auth', authRoutes);              // <-- добавили
+
 // Тестовый маршрут
 app.get('/', (req, res) => {
   res.send('Сервер работает! Добро пожаловать в военную библиотеку.');
 });
 
-// Запуск сервера после инициализации БД
 initDb()
   .then(() => {
     app.listen(port, () => {
