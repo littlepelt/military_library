@@ -44,4 +44,14 @@ router.post('/register', async (req, res) => {
   }
 });
 
+// ВРЕМЕННЫЙ МАРШРУТ – ПОСЛЕ ПРОВЕРКИ УДАЛИТЬ
+router.get('/users', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT id, username, full_name, rank, unit, role, created_at FROM users');
+    res.json(result.rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 module.exports = router;
