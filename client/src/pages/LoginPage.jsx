@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import axios from 'axios';
 import { useNavigate, Link } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
@@ -8,6 +9,7 @@ function LoginPage() {
   const [formData, setFormData] = useState({ username: '', password: '' });
   const [error, setError] = useState('');
   const navigate = useNavigate();
+  const { login } = useAuth(); // <-- используем контекст
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -18,11 +20,9 @@ function LoginPage() {
     setError('');
     try {
       const response = await axios.post(`${API_URL}/api/auth/login`, formData);
-      // Сохраняем токен и данные пользователя в localStorage
-      localStorage.setItem('token', response.data.token);
-      localStorage.setItem('user', JSON.stringify(response.data.user));
-      // Перенаправляем на главную (позже на библиотеку)
-      navigate('/');
+      // Вызываем login из контекста (он сохранит в состоянии и localStorage)
+      login(response.data.token, response.data.user);
+      navigate('/library'); // теперь перенаправляем на библиотеку
     } catch (err) {
       if (err.response && err.response.data && err.response.data.error) {
         setError(err.response.data.error);

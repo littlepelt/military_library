@@ -25,7 +25,7 @@ router.post('/register', async (req, res) => {
     // Хешируем пароль (10 "раундов" соли)
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Вставляем нового пользователя
+       // Вставляем нового пользователя
     const newUser = await pool.query(
       `INSERT INTO users (username, password, full_name, rank, unit)
        VALUES ($1, $2, $3, $4, $5)
@@ -33,10 +33,21 @@ router.post('/register', async (req, res) => {
       [username, hashedPassword, full_name || null, rank || null, unit || null]
     );
 
-    // Отправляем данные созданного пользователя (кроме пароля)
+    const user = newUser.rows[0];
+
+    // Создаём токен для нового пользователя
+    const jwt = require('jsonwebtoken');
+    const token = jwt.sign(
+      { id: user.id, username: user.username, role: user.role },
+      process.env.JWT_SECRET,
+      { expiresIn: '24h' }
+    );
+
+    // Отправляем и токен, и данные пользователя
     res.status(201).json({
       message: 'Пользователь успешно зарегистрирован',
-      user: newUser.rows[0],
+      token,
+      user,
     });
   } catch (err) {
     console.error('Ошибка регистрации:', err.message);
