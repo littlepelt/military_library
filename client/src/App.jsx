@@ -1,9 +1,19 @@
+import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
+import RegisterPage from './pages/RegisterPage';
+
 function App() {
   return (
-    <div>
-      <h1>Информационно-библиотечная система для военнослужащих</h1>
-      <p>Фронтенд запущен!</p>
-    </div>
+    <BrowserRouter>
+      <div>
+        <nav>
+          <Link to="/">Главная</Link> | <Link to="/register">Регистрация</Link>
+        </nav>
+        <Routes>
+          <Route path="/" element={<h1>Информационно-библиотечная система для военнослужащих</h1>} />
+          <Route path="/register" element={<RegisterPage />} />
+        </Routes>
+      </div>
+    </BrowserRouter>
   );
 }
 
