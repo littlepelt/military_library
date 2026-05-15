@@ -116,4 +116,61 @@ router.post('/login', async (req, res) => {
   }
 });
 
+// Middleware проверки авторизации (вынесем, чтобы переиспользовать)
+const authenticateToken = (req, res, next) => {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+  if (!token) {
+    return res.status(401).json({ error: 'Требуется токен авторизации' });
+  }
+  const jwt = require('jsonwebtoken');
+  jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
+    if (err) {
+      return res.status(403).json({ error: 'Неверный или просроченный токен' });
+    }
+    req.user = user;
+    next();
+  });
+};
+
+// GET /api/auth/profile (получить профиль)
+router.get('/profile', authenticateToken, async (req, res) => {
+  try {
+    const result = await pool.query(
+      'SELECT id, username, full_name, rank, unit, role, created_at FROM users WHERE id = $1',
+      [req.user.id]
+    );
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Пользователь не найден' });
+    }
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error('Ошибка получения профиля:', err.message);
+    res.status(500).json({ error: 'Внутренняя ошибка сервера' });
+  }
+});
+
+// PUT /api/auth/profile (обновить профиль)
+router.put('/profile', authenticateToken, async (req, res) => {
+  try {
+    const { full_name, rank, unit } = req.body;
+    // Обновляем только разрешённые поля
+    const result = await pool.query(
+      `UPDATE users SET full_name = COALESCE($1, full_name),
+                        rank = COALESCE($2, rank),
+                        unit = COALESCE($3, unit)
+       WHERE id = $4
+       RETURNING id, username, full_name, rank, unit, role, created_at`,
+      [full_name || null, rank || null, unit || null, req.user.id]
+    );
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Пользователь не найден' });
+    }
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error('Ошибка обновления профиля:', err.message);
+    res.status(500).json({ error: 'Внутренняя ошибка сервера' });
+  }
+});
+
 module.exports = router;
