@@ -5,6 +5,7 @@ import LoginPage from './pages/LoginPage';
 import LibraryPage from './pages/LibraryPage';
 import ProfilePage from './pages/ProfilePage';
 import ProtectedRoute from './components/ProtectedRoute';
+import HomePage from './pages/HomePage';
 
 function App() {
   const { isAuthenticated, logout, user } = useAuth();
@@ -27,7 +28,7 @@ function App() {
         </nav>
 
         <Routes>
-          <Route path="/" element={<h1>Информационно-библиотечная система для военнослужащих</h1>} />
+          <Route path="/" element={<h1>{<HomePage/>}</h1>} />
           <Route path="/register" element={isAuthenticated ? <Navigate to="/library" /> : <RegisterPage />} />
           <Route path="/login" element={isAuthenticated ? <Navigate to="/library" /> : <LoginPage />} />
           <Route

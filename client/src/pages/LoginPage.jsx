@@ -9,7 +9,7 @@ function LoginPage() {
   const [formData, setFormData] = useState({ username: '', password: '' });
   const [error, setError] = useState('');
   const navigate = useNavigate();
-  const { login } = useAuth(); // <-- используем контекст
+  const { login } = useAuth();
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -20,9 +20,8 @@ function LoginPage() {
     setError('');
     try {
       const response = await axios.post(`${API_URL}/api/auth/login`, formData);
-      // Вызываем login из контекста (он сохранит в состоянии и localStorage)
       login(response.data.token, response.data.user);
-      navigate('/library'); // теперь перенаправляем на библиотеку
+      navigate('/library');
     } catch (err) {
       if (err.response && err.response.data && err.response.data.error) {
         setError(err.response.data.error);
@@ -33,35 +32,37 @@ function LoginPage() {
   };
 
   return (
-    <div style={{ maxWidth: '400px', margin: '2rem auto', padding: '1rem' }}>
-      <h2>Вход в систему</h2>
-      <form onSubmit={handleSubmit}>
-        <div>
-          <label>Логин:</label>
-          <input
-            type="text"
-            name="username"
-            value={formData.username}
-            onChange={handleChange}
-            required
-          />
-        </div>
-        <div>
-          <label>Пароль:</label>
-          <input
-            type="password"
-            name="password"
-            value={formData.password}
-            onChange={handleChange}
-            required
-          />
-        </div>
-        <button type="submit" style={{ marginTop: '1rem' }}>Войти</button>
-      </form>
-      {error && <p style={{ color: 'red' }}>{error}</p>}
-      <p>
-        Ещё нет аккаунта? <Link to="/register">Зарегистрироваться</Link>
-      </p>
+    <div className="container">
+      <div className="card">
+        <h2>Вход в систему</h2>
+        <form onSubmit={handleSubmit}>
+          <div>
+            <label>Логин:</label>
+            <input
+              type="text"
+              name="username"
+              value={formData.username}
+              onChange={handleChange}
+              required
+            />
+          </div>
+          <div>
+            <label>Пароль:</label>
+            <input
+              type="password"
+              name="password"
+              value={formData.password}
+              onChange={handleChange}
+              required
+            />
+          </div>
+          <button type="submit">Войти</button>
+        </form>
+        {error && <p className="error">{error}</p>}
+        <p style={{ marginTop: '1rem' }}>
+          Ещё нет аккаунта? <Link to="/register">Зарегистрироваться</Link>
+        </p>
+      </div>
     </div>
   );
 }

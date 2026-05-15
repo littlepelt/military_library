@@ -22,7 +22,6 @@ function BookItem({ book }) {
     }
   };
 
-  // Загружаем комментарии при первом открытии
   useEffect(() => {
     if (showComments) {
       fetchComments();
@@ -39,7 +38,6 @@ function BookItem({ book }) {
     try {
       await api.post(`/api/books/${book.id}/comments`, { content: newComment });
       setNewComment('');
-      // Перезагружаем комментарии
       fetchComments();
     } catch (err) {
       setCommentError(err.response?.data?.error || 'Ошибка при добавлении комментария');
@@ -47,7 +45,7 @@ function BookItem({ book }) {
   };
 
   return (
-    <div style={{ border: '1px solid #ddd', margin: '0.5rem 0', padding: '0.75rem' }}>
+    <div className="card" style={{ marginBottom: '1rem' }}>
       <strong>{book.title}</strong> {book.author && `— ${book.author}`}
       <div style={{ fontSize: '0.9rem', color: '#555' }}>
         {book.description && <p>{book.description}</p>}
@@ -55,11 +53,10 @@ function BookItem({ book }) {
         {book.file_url && <a href={book.file_url} target="_blank" rel="noopener noreferrer">Скачать/открыть</a>}
       </div>
       <div style={{ fontSize: '0.8rem', color: '#888', marginBottom: '0.5rem' }}>
-        Добавил: {book.full_name || book.username} {new Date(book.created_at).toLocaleDateString()}
+        Добавил: {book.full_name || book.username} | {new Date(book.created_at).toLocaleDateString()}
       </div>
 
-      {/* Блок комментариев */}
-      <button onClick={() => setShowComments(!showComments)} style={{ fontSize: '0.85rem' }}>
+      <button onClick={() => setShowComments(!showComments)} style={{ fontSize: '0.85rem', marginRight: '0.5rem' }}>
         {showComments ? 'Скрыть обсуждение' : `Обсуждение (${comments.length})`}
       </button>
 
@@ -68,7 +65,7 @@ function BookItem({ book }) {
           {loadingComments ? (
             <div>Загрузка комментариев...</div>
           ) : commentError ? (
-            <div style={{ color: 'red' }}>{commentError}</div>
+            <div className="error">{commentError}</div>
           ) : comments.length === 0 ? (
             <div>Пока нет комментариев.</div>
           ) : (
@@ -86,7 +83,6 @@ function BookItem({ book }) {
             </ul>
           )}
 
-          {/* Форма добавления комментария (только для авторизованных) */}
           {user ? (
             <form onSubmit={handleAddComment} style={{ marginTop: '0.5rem' }}>
               <input
@@ -97,7 +93,7 @@ function BookItem({ book }) {
                 style={{ width: '70%', marginRight: '0.5rem' }}
               />
               <button type="submit">Отправить</button>
-              {commentError && <p style={{ color: 'red', fontSize: '0.85rem' }}>{commentError}</p>}
+              {commentError && <p className="error">{commentError}</p>}
             </form>
           ) : (
             <p style={{ fontSize: '0.85rem' }}>Войдите, чтобы комментировать.</p>
