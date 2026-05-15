@@ -3,6 +3,7 @@ import { useAuth } from './contexts/AuthContext';
 import RegisterPage from './pages/RegisterPage';
 import LoginPage from './pages/LoginPage';
 import LibraryPage from './pages/LibraryPage';
+import ProfilePage from './pages/ProfilePage';
 import ProtectedRoute from './components/ProtectedRoute';
 
 function App() {
@@ -16,7 +17,8 @@ function App() {
           {isAuthenticated ? (
             <>
               <Link to="/library">Библиотека</Link> |{' '}
-              <span>{user?.username}</span> |{' '}
+              <Link to="/profile">Профиль</Link> |{' '}
+              <span>{user?.full_name || user?.username}</span> |{' '}
               <button onClick={logout}>Выйти</button>
             </>
           ) : (
@@ -33,6 +35,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <LibraryPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/profile"
+            element={
+              <ProtectedRoute>
+                <ProfilePage />
               </ProtectedRoute>
             }
           />
