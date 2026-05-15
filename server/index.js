@@ -15,6 +15,8 @@ const authRoutes = require('./routes/auth');
 app.use('/api/auth', authRoutes);  
 const booksRoutes = require('./routes/books');
 app.use('/api/books', booksRoutes); 
+const commentsRoutes = require('./routes/comments');
+app.use('/api/books/:bookId/comments', commentsRoutes);
 
 
 // Тестовый маршрут
