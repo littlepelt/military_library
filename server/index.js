@@ -11,8 +11,11 @@ app.use(cors());
 app.use(express.json());
 
 // Подключаем маршруты аутентификации
-const authRoutes = require('./routes/auth');   // <-- добавили
-app.use('/api/auth', authRoutes);              // <-- добавили
+const authRoutes = require('./routes/auth'); 
+app.use('/api/auth', authRoutes);  
+const booksRoutes = require('./routes/books');
+app.use('/api/books', booksRoutes); 
+
 
 // Тестовый маршрут
 app.get('/', (req, res) => {
