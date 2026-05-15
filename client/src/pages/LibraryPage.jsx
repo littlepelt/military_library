@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import api from '../api';
 import { useAuth } from '../contexts/AuthContext';
+import BookItem from '../components/BookItem';
 
 function LibraryPage() {
   const { user, logout } = useAuth();
@@ -103,24 +104,14 @@ function LibraryPage() {
       <h3>Список документов</h3>
       {error && <p style={{ color: 'red' }}>{error}</p>}
       {books.length === 0 ? (
-        <p>Пока нет ни одной книги.</p>
-      ) : (
-        <ul style={{ listStyle: 'none', padding: 0 }}>
-          {books.map((book) => (
-            <li key={book.id} style={{ border: '1px solid #ddd', margin: '0.5rem 0', padding: '0.75rem' }}>
-              <strong>{book.title}</strong> {book.author && `— ${book.author}`}
-              <div style={{ fontSize: '0.9rem', color: '#555' }}>
-                {book.description && <p>{book.description}</p>}
-                {book.category && <span>Категория: {book.category} | </span>}
-                {book.file_url && <a href={book.file_url} target="_blank" rel="noopener noreferrer">Скачать/открыть</a>}
-              </div>
-              <div style={{ fontSize: '0.8rem', color: '#888' }}>
-                Добавил: {book.full_name || book.username} {new Date(book.created_at).toLocaleDateString()}
-              </div>
-            </li>
-          ))}
-        </ul>
-      )}
+  <p>Пока нет ни одной книги.</p>
+) : (
+  <div>
+    {books.map((book) => (
+      <BookItem key={book.id} book={book} />
+    ))}
+  </div>
+)}
     </div>
   );
 }
