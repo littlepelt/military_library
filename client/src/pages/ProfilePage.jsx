@@ -11,10 +11,7 @@ function ProfilePage() {
   const [formData, setFormData] = useState({ full_name: '', rank: '', unit: '' });
   const [saveMessage, setSaveMessage] = useState('');
 
-  useEffect(() => {
-    fetchProfile();
-  }, []);
-
+  // Объявляем функцию ДО useEffect
   const fetchProfile = async () => {
     try {
       const response = await api.get('/api/auth/profile');
@@ -24,12 +21,16 @@ function ProfilePage() {
         rank: response.data.rank || '',
         unit: response.data.unit || '',
       });
-    } catch (err) {
+    } catch {
       setError('Не удалось загрузить профиль');
     } finally {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchProfile();
+  }, []);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });

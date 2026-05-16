@@ -12,31 +12,45 @@ function LibraryPage() {
   const [showForm, setShowForm] = useState(false);
   const [sortBy, setSortBy] = useState('created_at');
   const [filterCategory, setFilterCategory] = useState('');
-
+  const [searchQuery, setSearchQuery] = useState('');
   const fetchBooks = async () => {
-    try {
-      const response = await api.get('/api/books');
-      let data = response.data;
-      // Применяем фильтр и сортировку на клиенте (можно и на сервере, но для простоты тут)
-      if (filterCategory) {
-        data = data.filter(b => b.category === filterCategory);
-      }
-      data.sort((a, b) => {
-        if (sortBy === 'title') return a.title.localeCompare(b.title);
-        if (sortBy === 'author') return (a.author || '').localeCompare(b.author || '');
-        return new Date(b.created_at) - new Date(a.created_at);
-      });
-      setBooks(data);
-    } catch (err) {
-      setError('Не удалось загрузить книги');
-    } finally {
-      setLoading(false);
+  try {
+    const response = await api.get('/api/books');
+    let data = response.data;
+
+    // Поиск
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      data = data.filter(b =>
+        (b.title && b.title.toLowerCase().includes(q)) ||
+        (b.author && b.author.toLowerCase().includes(q)) ||
+        (b.description && b.description.toLowerCase().includes(q))
+      );
     }
-  };
+
+    // Фильтр по категории
+    if (filterCategory) {
+      data = data.filter(b => b.category === filterCategory);
+    }
+
+    // Сортировка
+    data.sort((a, b) => {
+      if (sortBy === 'title') return a.title.localeCompare(b.title);
+      if (sortBy === 'author') return (a.author || '').localeCompare(b.author || '');
+      return new Date(b.created_at) - new Date(a.created_at);
+    });
+
+    setBooks(data);
+  } catch (err) {
+    setError('Не удалось загрузить книги');
+  } finally {
+    setLoading(false);
+  }
+};
 
   useEffect(() => {
-    fetchBooks();
-  }, [sortBy, filterCategory]);
+  fetchBooks();
+}, [sortBy, filterCategory, searchQuery]);
 
   const handleDeleteBook = (deletedId) => {
     setBooks(prev => prev.filter(b => b.id !== deletedId));
@@ -59,6 +73,15 @@ function LibraryPage() {
 
       {/* Панель управления */}
       <div className="card" style={{ padding: '1rem', marginBottom: '1.5rem' }}>
+        <div style={{ marginBottom: '1rem' }}>
+        <input
+          type="text"
+           placeholder="Поиск по названию, автору..."
+           value={searchQuery}
+           onChange={(e) => setSearchQuery(e.target.value)}
+           style={{ maxWidth: '300px' }}
+          />
+        </div>
         <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', alignItems: 'center' }}>
           <button onClick={() => setShowForm(!showForm)}>{showForm ? 'Скрыть форму' : 'Добавить книгу'}</button>
           <select value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
