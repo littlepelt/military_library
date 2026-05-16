@@ -79,7 +79,6 @@ router.get('/:id/like', async (req, res) => {
     const { id } = req.params;
     const countResult = await pool.query('SELECT COUNT(*) FROM likes WHERE book_id = $1', [id]);
     const likes = parseInt(countResult.rows[0].count, 10);
-    // Если пользователь авторизован, проверим его лайк
     let liked = false;
     const authHeader = req.headers['authorization'];
     if (authHeader) {
@@ -90,12 +89,12 @@ router.get('/:id/like', async (req, res) => {
           const decoded = jwt.verify(token, process.env.JWT_SECRET);
           const userLike = await pool.query('SELECT 1 FROM likes WHERE user_id = $1 AND book_id = $2', [decoded.id, id]);
           liked = userLike.rows.length > 0;
-        } catch (e) { /* токен невалидный – оставляем liked=false */ }
+        } catch (e) { /* невалидный токен – оставляем liked=false */ }
       }
     }
     res.json({ likes, liked });
   } catch (err) {
-    console.error(err);
+    console.error('Ошибка получения лайков:', err);
     res.status(500).json({ error: 'Ошибка получения лайков' });
   }
 });
@@ -105,7 +104,6 @@ router.post('/:id/like', authenticateToken, async (req, res) => {
   try {
     const { id } = req.params;
     const userId = req.user.id;
-    // Проверим, есть ли уже лайк
     const existing = await pool.query('SELECT 1 FROM likes WHERE user_id = $1 AND book_id = $2', [userId, id]);
     if (existing.rows.length > 0) {
       await pool.query('DELETE FROM likes WHERE user_id = $1 AND book_id = $2', [userId, id]);
@@ -115,7 +113,7 @@ router.post('/:id/like', authenticateToken, async (req, res) => {
       res.json({ liked: true });
     }
   } catch (err) {
-    console.error(err);
+    console.error('Ошибка переключения лайка:', err);
     res.status(500).json({ error: 'Ошибка переключения лайка' });
   }
 });
