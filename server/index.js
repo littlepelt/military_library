@@ -9,6 +9,24 @@ const port = process.env.PORT || 5000;
 
 app.use(cors());
 app.use(express.json());
+app.use('/uploads', express.static('uploads'));
+app.use(express.json());
+
+const multer = require('multer');
+const path = require('path');
+
+// Настройка хранилища для обложек
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, 'uploads/');
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, uniqueSuffix + path.extname(file.originalname));
+  }
+});
+const upload = multer({ storage });
+app.use('/uploads', express.static('uploads'));
 
 // Подключаем маршруты аутентификации
 const authRoutes = require('./routes/auth'); 

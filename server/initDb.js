@@ -29,6 +29,17 @@ const createTables = async () => {
     );
   `;
 
+// Внутри createTables добавим ALTER TABLE (если колонки нет)
+await pool.query(`
+  DO $$
+  BEGIN
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='books' AND column_name='cover_url') THEN
+      ALTER TABLE books ADD COLUMN cover_url TEXT;
+    END IF;
+  END
+  $$;
+`);
+
   const commentsQuery = `
     CREATE TABLE IF NOT EXISTS comments (
       id SERIAL PRIMARY KEY,

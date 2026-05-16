@@ -12,23 +12,24 @@ function ProfilePage() {
   const [saveMessage, setSaveMessage] = useState('');
 
   useEffect(() => {
-    const fetchProfile = async () => {
-      try {
-        const response = await api.get('/api/auth/profile');
-        setProfile(response.data);
-        setFormData({
-          full_name: response.data.full_name || '',
-          rank: response.data.rank || '',
-          unit: response.data.unit || '',
-        });
-      } catch (err) {
-        setError('Не удалось загрузить профиль');
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchProfile();
   }, []);
+
+  const fetchProfile = async () => {
+    try {
+      const response = await api.get('/api/auth/profile');
+      setProfile(response.data);
+      setFormData({
+        full_name: response.data.full_name || '',
+        rank: response.data.rank || '',
+        unit: response.data.unit || '',
+      });
+    } catch (err) {
+      setError('Не удалось загрузить профиль');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -55,33 +56,32 @@ function ProfilePage() {
 
   return (
     <div className="container">
-      <div className="card">
-        <h2>Профиль военнослужащего</h2>
-        {!editMode ? (
-          <div>
-            <p><strong>Логин:</strong> {profile.username}</p>
-            <p><strong>Имя:</strong> {profile.full_name || '—'}</p>
-            <p><strong>Звание:</strong> {profile.rank || '—'}</p>
-            <p><strong>Воинская часть:</strong> {profile.unit || '—'}</p>
-            <p><strong>Роль:</strong> {profile.role}</p>
-            <p><strong>Дата регистрации:</strong> {new Date(profile.created_at).toLocaleDateString()}</p>
+      <div className="card" style={{ maxWidth: '600px', margin: '0 auto' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+          <h2 style={{ margin: 0 }}>Профиль военнослужащего</h2>
+          {!editMode && (
             <button onClick={() => setEditMode(true)}>Редактировать</button>
+          )}
+        </div>
+
+        {!editMode ? (
+          <div style={{ display: 'grid', gap: '1rem' }}>
+            <div><strong>Логин:</strong> {profile.username}</div>
+            <div><strong>Имя:</strong> {profile.full_name || '—'}</div>
+            <div><strong>Звание:</strong> {profile.rank || '—'}</div>
+            <div><strong>Воинская часть:</strong> {profile.unit || '—'}</div>
+            <div><strong>Роль:</strong> {profile.role}</div>
+            <div><strong>Дата регистрации:</strong> {new Date(profile.created_at).toLocaleDateString()}</div>
           </div>
         ) : (
           <form onSubmit={handleSave}>
-            <div>
-              <label>Имя:</label>
-              <input type="text" name="full_name" value={formData.full_name} onChange={handleChange} />
-            </div>
-            <div>
-              <label>Звание:</label>
-              <input type="text" name="rank" value={formData.rank} onChange={handleChange} />
-            </div>
-            <div>
-              <label>Воинская часть:</label>
-              <input type="text" name="unit" value={formData.unit} onChange={handleChange} />
-            </div>
-            <div>
+            <label>Имя:</label>
+            <input type="text" name="full_name" value={formData.full_name} onChange={handleChange} />
+            <label>Звание:</label>
+            <input type="text" name="rank" value={formData.rank} onChange={handleChange} />
+            <label>Воинская часть:</label>
+            <input type="text" name="unit" value={formData.unit} onChange={handleChange} />
+            <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1rem' }}>
               <button type="submit">Сохранить</button>
               <button type="button" onClick={() => setEditMode(false)}>Отмена</button>
             </div>

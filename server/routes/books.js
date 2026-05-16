@@ -3,6 +3,22 @@ const router = express.Router();
 const pool = require('../db');
 const jwt = require('jsonwebtoken');
 const { authenticateToken, requireAdmin} = require('../middleware/auth');
+const multer = require('multer');
+const path = require('path');
+const storage = multer.diskStorage({
+  destination: 'uploads/',
+  filename: (req, file, cb) => {
+    cb(null, Date.now() + '-' + Math.round(Math.random() * 1E9) + path.extname(file.originalname));
+  }
+});
+
+const upload = multer({ storage });
+// POST /api/books/upload (загрузка обложки)
+router.post('/upload', authenticateToken, upload.single('cover'), (req, res) => {
+  if (!req.file) return res.status(400).json({ error: 'Файл не загружен' });
+  const fileUrl = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
+  res.json({ url: fileUrl });
+});
 
 // Получить все книги
 router.get('/', async (req, res) => {

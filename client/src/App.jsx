@@ -6,9 +6,11 @@ import LibraryPage from './pages/LibraryPage';
 import ProfilePage from './pages/ProfilePage';
 import ProtectedRoute from './components/ProtectedRoute';
 import HomePage from './pages/HomePage';
+import { useTheme } from './contexts/ThemeContext';
 
 function App() {
   const { isAuthenticated, logout, user } = useAuth();
+  const { theme, toggleTheme} = useTheme();
 
   return (
     <BrowserRouter>
@@ -21,6 +23,9 @@ function App() {
               <Link to="/profile">Профиль</Link> |{' '}
               <span>{user?.full_name || user?.username}</span> |{' '}
               <button onClick={logout}>Выйти</button>
+              <button onClick={toggleTheme} style={{ marginLeft: 'auto', background: 'transparent', border: '1px solid #fff', color: '#fff', padding: '0.25rem 0.75rem', borderRadius: '6px', cursor: 'pointer' }}>
+  {theme === 'light' ? '🌙 Тёмная' : '☀️ Светлая'}
+</button>
             </>
           ) : (
             <Link to="/login">Вход</Link>

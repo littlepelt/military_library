@@ -2,30 +2,33 @@ import { useState, useEffect } from 'react';
 import api from '../api';
 import { useAuth } from '../contexts/AuthContext';
 import BookItem from '../components/BookItem';
+import AddBookForm from '../components/AddBookForm';
 
 function LibraryPage() {
   const { user, logout } = useAuth();
   const [books, setBooks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-
-  const [title, setTitle] = useState('');
-  const [author, setAuthor] = useState('');
-  const [description, setDescription] = useState('');
-  const [category, setCategory] = useState('');
-  const [fileUrl, setFileUrl] = useState('');
-  const [addMessage, setAddMessage] = useState('');
-
-  const handleDeleteBook = (deletedId) => {
-  setBooks(prevBooks => prevBooks.filter(b => b.id !== deletedId));
-  }; 
+  const [showForm, setShowForm] = useState(false);
+  const [sortBy, setSortBy] = useState('created_at');
+  const [filterCategory, setFilterCategory] = useState('');
 
   const fetchBooks = async () => {
     try {
       const response = await api.get('/api/books');
-      setBooks(response.data);
+      let data = response.data;
+      // Применяем фильтр и сортировку на клиенте (можно и на сервере, но для простоты тут)
+      if (filterCategory) {
+        data = data.filter(b => b.category === filterCategory);
+      }
+      data.sort((a, b) => {
+        if (sortBy === 'title') return a.title.localeCompare(b.title);
+        if (sortBy === 'author') return (a.author || '').localeCompare(b.author || '');
+        return new Date(b.created_at) - new Date(a.created_at);
+      });
+      setBooks(data);
     } catch (err) {
-      setError('Не удалось загрузить список книг');
+      setError('Не удалось загрузить книги');
     } finally {
       setLoading(false);
     }
@@ -33,82 +36,57 @@ function LibraryPage() {
 
   useEffect(() => {
     fetchBooks();
-  }, []);
+  }, [sortBy, filterCategory]);
 
-  const handleAddBook = async (e) => {
-    e.preventDefault();
-    setAddMessage('');
-    if (!title.trim()) {
-      setAddMessage('Название книги обязательно');
-      return;
-    }
-    try {
-      await api.post('/api/books', {
-        title,
-        author,
-        description,
-        category,
-        file_url: fileUrl,
-      });
-      setTitle('');
-      setAuthor('');
-      setDescription('');
-      setCategory('');
-      setFileUrl('');
-      setAddMessage('Книга успешно добавлена!');
-      fetchBooks();
-    } catch (err) {
-      setAddMessage(err.response?.data?.error || 'Ошибка при добавлении книги');
-    }
+  const handleDeleteBook = (deletedId) => {
+    setBooks(prev => prev.filter(b => b.id !== deletedId));
   };
+
+  // Уникальные категории для фильтра
+  const categories = [...new Set(books.map(b => b.category).filter(Boolean))];
 
   if (loading) return <div className="container">Загрузка библиотеки...</div>;
 
   return (
     <div className="container">
-      <h2>Военная библиотека</h2>
-      <p style={{ marginBottom: '1rem' }}>Добро пожаловать, {user?.full_name || user?.username}!</p>
-      <button onClick={logout} style={{ marginBottom: '2rem' }}>Выйти</button>
-
-      <div className="card">
-        <h3>Добавить книгу или документ</h3>
-        <form onSubmit={handleAddBook}>
-          <div>
-            <label>Название *:</label>
-            <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} required />
-          </div>
-          <div>
-            <label>Автор:</label>
-            <input type="text" value={author} onChange={(e) => setAuthor(e.target.value)} />
-          </div>
-          <div>
-            <label>Описание:</label>
-            <textarea value={description} onChange={(e) => setDescription(e.target.value)} rows="3" />
-          </div>
-          <div>
-            <label>Категория:</label>
-            <input type="text" value={category} onChange={(e) => setCategory(e.target.value)} placeholder="Устав, приказ, учение..." />
-          </div>
-          <div>
-            <label>Ссылка на файл (URL):</label>
-            <input type="text" value={fileUrl} onChange={(e) => setFileUrl(e.target.value)} />
-          </div>
-          <button type="submit">Добавить</button>
-          {addMessage && <p className={addMessage.includes('успешно') ? 'success' : 'error'} style={{ marginTop: '0.5rem' }}>{addMessage}</p>}
-        </form>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+        <h2>📚 Военная библиотека</h2>
+        <div>
+          <span style={{ marginRight: '1rem' }}>{user?.full_name || user?.username}</span>
+          <button onClick={logout} className="btn-sm">Выйти</button>
+        </div>
       </div>
 
-      <div className="card">
-        <h3>Список документов</h3>
-        {error && <p className="error">{error}</p>}
-        {books.length === 0 ? (
-        <p>Пока нет ни одной книги.</p>
-        ) : (
-         books.map((book) => (
-        <BookItem key={book.id} book={book} onDeleteBook={handleDeleteBook} />
-        ))
-      )}
+      {/* Панель управления */}
+      <div className="card" style={{ padding: '1rem', marginBottom: '1.5rem' }}>
+        <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', alignItems: 'center' }}>
+          <button onClick={() => setShowForm(!showForm)}>{showForm ? 'Скрыть форму' : 'Добавить книгу'}</button>
+          <select value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
+            <option value="created_at">Сначала новые</option>
+            <option value="title">По названию</option>
+            <option value="author">По автору</option>
+          </select>
+          <select value={filterCategory} onChange={(e) => setFilterCategory(e.target.value)}>
+            <option value="">Все категории</option>
+            {categories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
+          </select>
+        </div>
+        {showForm && (
+          <div style={{ marginTop: '1rem' }}>
+            <AddBookForm onBookAdded={() => { fetchBooks(); setShowForm(false); }} />
+          </div>
+        )}
       </div>
+
+      {error && <p className="error">{error}</p>}
+
+      {/* Сетка книг (полки) */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1.5rem' }}>
+        {books.map(book => (
+          <BookItem key={book.id} book={book} onDeleteBook={handleDeleteBook} />
+        ))}
+      </div>
+      {books.length === 0 && <p>Пока нет ни одной книги.</p>}
     </div>
   );
 }
