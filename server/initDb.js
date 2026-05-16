@@ -1,5 +1,6 @@
 // initDb.js
 const pool = require('./db');
+const bcrypt = require('bcrypt');
 
 const createTables = async () => {
   const usersQuery = `
@@ -45,6 +46,20 @@ const createTables = async () => {
     console.log('✅ Таблица books создана или уже существует.');
     await pool.query(commentsQuery);
     console.log('✅ Таблица comments создана или уже существует.');
+
+    // Проверяем, есть ли уже пользователи
+    const { rows } = await pool.query('SELECT COUNT(*) FROM users');
+    const userCount = parseInt(rows[0].count, 10);
+    if (userCount === 0) {
+      // Создаём администратора по умолчанию
+      const hashedPassword = await bcrypt.hash('admin123', 10);
+      await pool.query(
+        `INSERT INTO users (username, password, full_name, rank, unit, role)
+         VALUES ($1, $2, $3, $4, $5, $6)`,
+        ['admin', hashedPassword, 'Администратор', 'полковник', 'Управление', 'admin']
+      );
+      console.log('✅ Администратор по умолчанию создан (логин: admin, пароль: admin123)');
+    }
   } catch (err) {
     console.error('❌ Ошибка создания таблиц:', err.message);
   }

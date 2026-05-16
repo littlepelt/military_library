@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router({ mergeParams: true }); // чтобы получать bookId из родительского маршрута
 const pool = require('../db');
 const jwt = require('jsonwebtoken');
+const { authenticateToken, requireAdmin}= require('../middleware/auth')
 
 // Middleware проверки авторизации (можно было бы вынести в общий модуль, но пока оставим здесь)
 const authenticateToken = (req, res, next) => {
@@ -68,6 +69,24 @@ router.post('/', authenticateToken, async (req, res) => {
     res.status(201).json(commentWithUser.rows[0]);
   } catch (err) {
     console.error('Ошибка добавления комментария:', err.message);
+    res.status(500).json({ error: 'Внутренняя ошибка сервера' });
+  }
+});
+
+// DELETE /api/books/:bookId/comments/:commentId (только admin)
+router.delete('/:commentId', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const { bookId, commentId } = req.params;
+    const result = await pool.query(
+      'DELETE FROM comments WHERE id = $1 AND book_id = $2 RETURNING *',
+      [commentId, bookId]
+    );
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Комментарий не найден' });
+    }
+    res.json({ message: 'Комментарий успешно удалён' });
+  } catch (err) {
+    console.error('Ошибка удаления комментария:', err.message);
     res.status(500).json({ error: 'Внутренняя ошибка сервера' });
   }
 });
