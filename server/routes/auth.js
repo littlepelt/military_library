@@ -173,4 +173,25 @@ router.put('/profile', authenticateToken, async (req, res) => {
   }
 });
 
+// POST /api/auth/make-admin (повышение пользователя до admin по секретному ключу)
+router.post('/make-admin', async (req, res) => {
+  const { username, setupKey } = req.body;
+  if (!setupKey || setupKey !== process.env.ADMIN_SETUP_KEY) {
+    return res.status(403).json({ error: 'Неверный ключ настройки' });
+  }
+  try {
+    const result = await pool.query(
+      'UPDATE users SET role = $1 WHERE username = $2 RETURNING id, username, role',
+      ['admin', username]
+    );
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Пользователь не найден' });
+    }
+    res.json({ message: `Пользователь ${username} теперь администратор.` });
+  } catch (err) {
+    console.error('Ошибка повышения:', err.message);
+    res.status(500).json({ error: 'Внутренняя ошибка сервера' });
+  }
+});
+
 module.exports = router;

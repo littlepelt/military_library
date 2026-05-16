@@ -16,6 +16,10 @@ function LibraryPage() {
   const [fileUrl, setFileUrl] = useState('');
   const [addMessage, setAddMessage] = useState('');
 
+  const handleDeleteBook = (deletedId) => {
+  setBooks(prevBooks => prevBooks.filter(b => b.id !== deletedId));
+  }; 
+
   const fetchBooks = async () => {
     try {
       const response = await api.get('/api/books');
@@ -98,10 +102,12 @@ function LibraryPage() {
         <h3>Список документов</h3>
         {error && <p className="error">{error}</p>}
         {books.length === 0 ? (
-          <p>Пока нет ни одной книги.</p>
+        <p>Пока нет ни одной книги.</p>
         ) : (
-          books.map((book) => <BookItem key={book.id} book={book} />)
-        )}
+         books.map((book) => (
+        <BookItem key={book.id} book={book} onDeleteBook={handleDeleteBook} />
+        ))
+      )}
       </div>
     </div>
   );
