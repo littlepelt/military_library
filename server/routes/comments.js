@@ -4,22 +4,6 @@ const pool = require('../db');
 const jwt = require('jsonwebtoken');
 const { authenticateToken, requireAdmin}= require('../middleware/auth')
 
-// Middleware проверки авторизации (можно было бы вынести в общий модуль, но пока оставим здесь)
-const authenticateToken = (req, res, next) => {
-  const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1];
-  if (!token) {
-    return res.status(401).json({ error: 'Требуется токен авторизации' });
-  }
-  jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
-    if (err) {
-      return res.status(403).json({ error: 'Неверный или просроченный токен' });
-    }
-    req.user = user;
-    next();
-  });
-};
-
 // GET /api/books/:bookId/comments
 router.get('/', async (req, res) => {
   try {

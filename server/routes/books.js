@@ -4,22 +4,6 @@ const pool = require('../db');
 const jwt = require('jsonwebtoken');
 const { authenticateToken, requireAdmin} = require('../middleware/auth');
 
-// Middleware проверки авторизации (вынесем для удобства)
-const authenticateToken = (req, res, next) => {
-  const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
-  if (!token) {
-    return res.status(401).json({ error: 'Требуется токен авторизации' });
-  }
-  jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
-    if (err) {
-      return res.status(403).json({ error: 'Неверный или просроченный токен' });
-    }
-    req.user = user; // добавляем данные пользователя в запрос
-    next();
-  });
-};
-
 // Получить все книги
 router.get('/', async (req, res) => {
   try {
