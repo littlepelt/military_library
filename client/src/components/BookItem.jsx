@@ -80,14 +80,14 @@ function BookItem({ book, onDeleteBook }) {  // добавили onDeleteBook д
             Добавил: {book.full_name || book.username} | {new Date(book.created_at).toLocaleDateString()}
           </div>
         </div>
-        {isAdmin && (
-          <button onClick={handleDeleteBook} style={{ background: 'var(--danger)', padding: '0.25rem 0.75rem' }}>
+         {isAdmin && (
+          <button onClick={handleDeleteBook} className="btn-danger btn-sm">
             Удалить книгу
           </button>
         )}
       </div>
 
-      <button onClick={() => setShowComments(!showComments)} style={{ fontSize: '0.85rem', marginRight: '0.5rem' }}>
+            <button onClick={() => setShowComments(!showComments)} className="btn-sm" style={{ marginRight: '0.5rem' }}>
         {showComments ? 'Скрыть обсуждение' : `Обсуждение (${comments.length})`}
       </button>
 
@@ -111,8 +111,8 @@ function BookItem({ book, onDeleteBook }) {  // добавили onDeleteBook д
                     </span>
                     <p style={{ margin: '0.25rem 0 0 0' }}>{c.content}</p>
                   </div>
-                  {isAdmin && (
-                    <button onClick={() => handleDeleteComment(c.id)} style={{ background: 'var(--danger)', padding: '0.15rem 0.5rem', fontSize: '0.8rem' }}>
+                {isAdmin && (
+                    <button onClick={() => handleDeleteComment(c.id)} className="btn-danger btn-sm" style={{ marginLeft: '1rem' }}>
                       Удалить
                     </button>
                   )}
