@@ -118,4 +118,21 @@ router.post('/:id/like', authenticateToken, async (req, res) => {
   }
 });
 
+// ВРЕМЕННЫЙ МАРШРУТ – СОЗДАТЬ ТАБЛИЦУ LIKES (после исправления удалить)
+router.post('/create-likes-table', async (req, res) => {
+  try {
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS likes (
+        user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+        book_id INTEGER REFERENCES books(id) ON DELETE CASCADE,
+        PRIMARY KEY (user_id, book_id)
+      );
+    `);
+    res.json({ message: 'Таблица likes успешно создана' });
+  } catch (err) {
+    console.error('Ошибка при создании таблицы likes:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 module.exports = router;
