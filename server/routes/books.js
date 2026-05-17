@@ -3,16 +3,8 @@ const router = express.Router();
 const pool = require('../db');
 const jwt = require('jsonwebtoken');
 const { authenticateToken, requireAdmin} = require('../middleware/auth');
-const multer = require('multer');
 const path = require('path');
-const storage = multer.diskStorage({
-  destination: 'uploads/',
-  filename: (req, file, cb) => {
-    cb(null, Date.now() + '-' + Math.round(Math.random() * 1E9) + path.extname(file.originalname));
-  }
-});
 
-const upload = multer({ storage });
 // POST /api/books/upload (загрузка обложки)
 router.post('/upload', authenticateToken, upload.single('cover'), (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'Файл не загружен' });
@@ -99,39 +91,61 @@ router.get('/:id/like', async (req, res) => {
   }
 });
 
-// Переключить лайк (только для авторизованных)
-router.post('/:id/like', authenticateToken, async (req, res) => {
-  try {
-    const { id } = req.params;
-    const userId = req.user.id;
-    const existing = await pool.query('SELECT 1 FROM likes WHERE user_id = $1 AND book_id = $2', [userId, id]);
-    if (existing.rows.length > 0) {
-      await pool.query('DELETE FROM likes WHERE user_id = $1 AND book_id = $2', [userId, id]);
-      res.json({ liked: false });
-    } else {
-      await pool.query('INSERT INTO likes (user_id, book_id) VALUES ($1, $2)', [userId, id]);
-      res.json({ liked: true });
-    }
-  } catch (err) {
-    console.error('Ошибка переключения лайка:', err);
-    res.status(500).json({ error: 'Ошибка переключения лайка' });
+// Настройка multer для загрузки обложки и файла книги
+const multer = require('multer');
+const path = require('path');
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, 'uploads/');
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+    const ext = path.extname(file.originalname);
+    cb(null, file.fieldname + '-' + uniqueSuffix + ext);
   }
 });
+const upload = multer({ storage });
 
-// ВРЕМЕННЫЙ МАРШРУТ – СОЗДАТЬ ТАБЛИЦУ LIKES (после исправления удалить)
-router.post('/create-likes-table', async (req, res) => {
+// Создать книгу (с файлами)
+router.post('/', authenticateToken, upload.fields([
+  { name: 'cover', maxCount: 1 },
+  { name: 'file', maxCount: 1 }
+]), async (req, res) => {
   try {
-    await pool.query(`
-      CREATE TABLE IF NOT EXISTS likes (
-        user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-        book_id INTEGER REFERENCES books(id) ON DELETE CASCADE,
-        PRIMARY KEY (user_id, book_id)
-      );
-    `);
-    res.json({ message: 'Таблица likes успешно создана' });
+    const { title, author, description, category } = req.body;
+    if (!title) {
+      return res.status(400).json({ error: 'Название книги обязательно' });
+    }
+
+    // Формируем URL для обложки и файла, если они загружены
+    let cover_url = null;
+    let file_url = null;
+    if (req.files && req.files.cover && req.files.cover.length > 0) {
+      cover_url = `${req.protocol}://${req.get('host')}/uploads/${req.files.cover[0].filename}`;
+    }
+    if (req.files && req.files.file && req.files.file.length > 0) {
+      file_url = `${req.protocol}://${req.get('host')}/uploads/${req.files.file[0].filename}`;
+    }
+
+    const newBook = await pool.query(
+      `INSERT INTO books (title, author, description, category, cover_url, file_url, added_by)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)
+       RETURNING *`,
+      [title, author || null, description || null, category || null, cover_url, file_url, req.user.id]
+    );
+
+    // Присоединяем данные пользователя
+    const bookWithUser = await pool.query(
+      `SELECT books.*, users.username, users.full_name
+       FROM books
+       LEFT JOIN users ON books.added_by = users.id
+       WHERE books.id = $1`,
+      [newBook.rows[0].id]
+    );
+    res.status(201).json(bookWithUser.rows[0]);
   } catch (err) {
-    console.error('Ошибка при создании таблицы likes:', err);
-    res.status(500).json({ error: err.message });
+    console.error('Ошибка добавления книги:', err.message);
+    res.status(500).json({ error: 'Внутренняя ошибка сервера' });
   }
 });
 

@@ -6,15 +6,11 @@ function AddBookForm({ onBookAdded }) {
   const [author, setAuthor] = useState('');
   const [description, setDescription] = useState('');
   const [category, setCategory] = useState('');
-  const [fileUrl, setFileUrl] = useState('');
   const [coverFile, setCoverFile] = useState(null);
+  const [bookFile, setBookFile] = useState(null);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
   const [uploading, setUploading] = useState(false);
-
-  const handleCoverChange = (e) => {
-    setCoverFile(e.target.files[0]);
-  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -26,25 +22,33 @@ function AddBookForm({ onBookAdded }) {
     }
     setUploading(true);
     try {
-      let coverUrl = '';
-      // Загрузка обложки, если выбран файл
+      const formData = new FormData();
+      formData.append('title', title);
+      formData.append('author', author);
+      formData.append('description', description);
+      formData.append('category', category);
       if (coverFile) {
-        const formData = new FormData();
         formData.append('cover', coverFile);
-        const uploadRes = await api.post('/api/books/upload', formData, {
-          headers: { 'Content-Type': 'multipart/form-data' },
-        });
-        coverUrl = uploadRes.data.url;
       }
-      // Создание книги
-      await api.post('/api/books', {
-        title, author, description, category, file_url: fileUrl, cover_url: coverUrl
+      if (bookFile) {
+        formData.append('file', bookFile);
+      }
+
+      await api.post('/api/books', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
       });
+
       setMessage('Книга добавлена!');
-      setTitle(''); setAuthor(''); setDescription(''); setCategory(''); setFileUrl(''); setCoverFile(null);
+      // Очистка полей
+      setTitle('');
+      setAuthor('');
+      setDescription('');
+      setCategory('');
+      setCoverFile(null);
+      setBookFile(null);
       if (onBookAdded) onBookAdded();
     } catch (err) {
-      setError(err.response?.data?.error || 'Ошибка');
+      setError(err.response?.data?.error || 'Ошибка при добавлении книги');
     } finally {
       setUploading(false);
     }
@@ -62,10 +66,10 @@ function AddBookForm({ onBookAdded }) {
         <textarea value={description} onChange={(e) => setDescription(e.target.value)} />
         <label>Категория</label>
         <input value={category} onChange={(e) => setCategory(e.target.value)} placeholder="Например: Устав" />
-        <label>Ссылка на файл</label>
-        <input value={fileUrl} onChange={(e) => setFileUrl(e.target.value)} placeholder="URL документа" />
-        <label>Обложка</label>
-        <input type="file" accept="image/*" onChange={handleCoverChange} />
+        <label>Обложка (изображение)</label>
+        <input type="file" accept="image/*" onChange={(e) => setCoverFile(e.target.files[0])} />
+        <label>Файл книги (PDF, DOCX)</label>
+        <input type="file" accept=".pdf,.doc,.docx,.txt" onChange={(e) => setBookFile(e.target.files[0])} />
         <button type="submit" disabled={uploading} style={{ marginTop: '1rem' }}>
           {uploading ? 'Загрузка...' : 'Добавить'}
         </button>
