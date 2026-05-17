@@ -50,10 +50,9 @@ router.post('/', authenticateToken, upload.fields([
     let cover_url = null;
     let file_url = null;
     if (req.files?.cover?.length > 0) {
-      cover_url = `${req.protocol}://${req.get('host')}/uploads/${req.files.cover[0].filename}`;
-    }
+      cover_url = `https://${req.get('host')}/uploads/${req.files.cover[0].filename}`;    }
     if (req.files?.file?.length > 0) {
-      file_url = `${req.protocol}://${req.get('host')}/uploads/${req.files.file[0].filename}`;
+      file_url = `https://${req.get('host')}/uploads/${req.files.file[0].filename}`;
     }
 
     const newBook = await pool.query(

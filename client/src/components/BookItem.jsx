@@ -116,14 +116,7 @@ function BookItem({ book, onDeleteBook }) {
         )}
         {book.description && <p style={{ marginTop: '0.5rem', fontSize: '0.95rem' }}>{book.description}</p>}
         {book.file_url && (
-          <a
-            href={book.file_url}
-            target="_blank"
-            rel="noopener noreferrer"
-            style={{ display: 'inline-block', marginTop: '0.5rem' }}
-          >
-            📄 Открыть документ
-          </a>
+          <a href={book.file_url} download rel="noopener noreferrer">📄 Скачать документ</a>
         )}
         <div style={{ marginTop: '0.5rem', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
           Добавил: {book.full_name || book.username} | {new Date(book.created_at).toLocaleDateString()}
