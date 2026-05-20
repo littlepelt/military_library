@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Link, Navigate } from 'react-router-dom';
+import { HashRouter, Routes, Route, Link, Navigate } from 'react-router-dom';
 import { useAuth } from './contexts/AuthContext';
 import RegisterPage from './pages/RegisterPage';
 import LoginPage from './pages/LoginPage';
@@ -13,7 +13,7 @@ function App() {
   const { theme, toggleTheme} = useTheme();
 
   return (
-    <BrowserRouter>
+    <HashRouter>
       <div>
         <nav style={{ padding: '1rem', borderBottom: '1px solid #ccc' }}>
           <Link to="/">Главная</Link> | <Link to="/register">Регистрация</Link> |{' '}
@@ -54,7 +54,7 @@ function App() {
           />
         </Routes>
       </div>
-    </BrowserRouter>
+    </HashRouter>
   );
 }
 
